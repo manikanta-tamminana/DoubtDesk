@@ -62,9 +62,7 @@ export default function ClassroomPage() {
     const [isCodeModalOpen, setIsCodeModalOpen] = useState(false);
     const [copied, setCopied] = useState(false);
     const [doubtFilter, setDoubtFilter] = useState<'pending' | 'solved'>('pending');
-<<<<<<< Updated upstream
     const [tabCache, setTabCache] = useState<Record<string, any>>({});
-=======
     
     useHotkeys("n", (e) => {
         e.preventDefault();
@@ -72,7 +70,6 @@ export default function ClassroomPage() {
     }, {
         enableOnFormTags: false,
     });
->>>>>>> Stashed changes
 
     useEffect(() => {
         initialFetch();
