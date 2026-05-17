@@ -50,7 +50,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             {/* Sidebar */}
             <aside
                 className={`
-          fixed lg:static inset-y-0 left-0 z-40
+          fixed lg:sticky lg:top-0 lg:h-screen shrink-0 inset-y-0 left-0 z-40
           w-64 bg-background border-r border-border
           transform transition-transform duration-300 ease-in-out
           ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
