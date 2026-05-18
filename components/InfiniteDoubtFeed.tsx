@@ -34,7 +34,7 @@ export default function InfiniteDoubtFeed({
     emptyActionLabel
 }: InfiniteDoubtFeedProps) {
     const getKey = (pageIndex: number, previousPageData: any) => {
-        if (previousPageData && !previousPageData.pagination.hasMore) return null;
+        if (previousPageData && !previousPageData.pagination?.hasMore) return null;
 
 
         const params = new URLSearchParams();
@@ -60,7 +60,7 @@ export default function InfiniteDoubtFeed({
 
     const doubts = data ? data.flatMap((page) => page?.doubts ?? []) : [];
     const isEmpty = data?.[0]?.doubts?.length === 0 || data?.[0]?.error !== undefined;
-    const isReachingEnd = isEmpty || (data && !data[data.length - 1]?.pagination.hasMore);
+    const isReachingEnd = isEmpty || (data && !data[data.length - 1]?.pagination?.hasMore);
     const isLoadingMore = isLoading || (size > 0 && data && typeof data[size - 1] === "undefined");
 
     if (isLoading && doubts.length === 0) {
