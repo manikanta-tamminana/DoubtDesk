@@ -22,7 +22,7 @@ export default function Footer() {
                 { label: "Privacy Policy", href: "/privacy-policy" },
                 { label: "Terms of Service", href: "/terms-of-service" },
                 { label: "Leaderboard", href: "/leaderboard" },
-                { label: "Help Center", href: "/help" },
+                { label: "FAQs", href: "/faq" },
             ],
         },
         {
