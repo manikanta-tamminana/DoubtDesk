@@ -1,5 +1,5 @@
-import { Spinner } from "../components/Spinner";
+import { FullScreenSpinner } from "../components/FullScreenSpinner";
 
 export default function Loading() {
-    return <Spinner />;
+    return <FullScreenSpinner />;
 }
