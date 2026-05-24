@@ -46,25 +46,35 @@ const suggestTags = (text: string, subject: string) => {
     return Array.from(tags).slice(0, 4);
 };
 
-/**
- * AskDoubt Component
- * A modal form for students to submit doubts to the community or a specific classroom.
- * Features:
- * - Anonymous user identification via localStorage
- * - Image & PDF attachment support with base64 conversion and 5MB validation
- * - Edit mode for existing doubts
- */
 export default function AskDoubt({ defaultSubject = "", isOpen, onClose, onSuccess, doubtToEdit, classroomId = null, type = 'community' }: AskDoubtProps) {
     const [content, setContent] = useState(doubtToEdit?.content || "");
-    const maxLength = 500;
-    const charCount = content.length;
-    let colorClass = "text-slate-400";
 
-if (charCount >= maxLength) {
-  colorClass = "text-red-500";
-} else if (charCount >= maxLength * 0.8) {
-  colorClass = "text-yellow-400";
-}
+    const maxLength = 500;
+    const minLength = 20;
+    const charCount = content.length;
+    const hasContent = content.trim().length > 0;
+    const isTooShort = hasContent && content.trim().length < minLength;
+    const isTooLong = charCount > maxLength;
+    const progressPercent = Math.min((charCount / maxLength) * 100, 100);
+
+    let colorClass = "text-slate-400";
+    if (isTooLong) {
+        colorClass = "text-red-500";
+    } else if (charCount >= maxLength * 0.8) {
+        colorClass = "text-yellow-400";
+    } else if (charCount >= minLength) {
+        colorClass = "text-green-400";
+    }
+
+    let progressBarColor = "bg-blue-500";
+    if (isTooLong) {
+        progressBarColor = "bg-red-500";
+    } else if (charCount >= maxLength * 0.8) {
+        progressBarColor = "bg-yellow-400";
+    } else if (charCount >= minLength) {
+        progressBarColor = "bg-green-400";
+    }
+
     const [subject, setSubject] = useState(doubtToEdit?.subject || defaultSubject);
     const [imageUrl, setImageUrl] = useState(doubtToEdit?.imageUrl || "");
     const [fileName, setFileName] = useState(
@@ -109,7 +119,6 @@ if (charCount >= maxLength) {
         const newContent = text.substring(0, start) + replacement + text.substring(end);
         setContent(newContent);
 
-        // Reset cursor pos and focus
         setTimeout(() => {
             textarea.focus();
             const newCursorPos = start + replacement.length;
@@ -216,17 +225,22 @@ if (charCount >= maxLength) {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (charCount > maxLength) {
-            toast.error("Character limit exceeded (500)");
+
+        if (isTooLong) {
+            toast.error("Character limit exceeded (500 characters)");
             return;
-            }
+        }
+        if (hasContent && isTooShort) {
+            toast.error(`Question too short — minimum ${minLength} characters required`);
+            return;
+        }
         if ((!content.trim() && !imageUrl) || !subject.trim()) return;
 
         setIsSubmitting(true);
         try {
             const url = doubtToEdit ? `/api/doubts/action/${doubtToEdit.id}` : "/api/doubts";
             const method = doubtToEdit ? "PATCH" : "POST";
-            const body = doubtToEdit 
+            const body = doubtToEdit
                 ? { action: "edit", content, subject, imageUrl, tags }
                 : { userName, subject, content, imageUrl, classroomId, type, tags };
 
@@ -272,7 +286,7 @@ if (charCount >= maxLength) {
                             Collaborative • Anonymous • {userName}
                         </p>
                     </div>
-                    <button 
+                    <button
                         onClick={onClose}
                         className="p-2 hover:bg-slate-100 dark:hover:bg-white/5 rounded-full text-slate-600 dark:text-slate-400 transition-colors"
                         aria-label="Close modal"
@@ -322,9 +336,9 @@ if (charCount >= maxLength) {
                                 <button type="button" onClick={() => insertMarkdown("code")} className="p-1.5 hover:bg-slate-200 dark:hover:bg-white/10 rounded text-slate-600 dark:text-slate-400"><Code className="w-3 h-3" /></button>
                                 <button type="button" onClick={() => insertMarkdown("list")} className="p-1.5 hover:bg-slate-200 dark:hover:bg-white/10 rounded text-slate-600 dark:text-slate-400"><List className="w-3 h-3" /></button>
                                 <div className="w-px h-3 bg-slate-200 dark:bg-white/10 mx-1" />
-                                <button 
+                                <button
                                     type="button"
-                                    onClick={() => setIsPreviewMode(!isPreviewMode)} 
+                                    onClick={() => setIsPreviewMode(!isPreviewMode)}
                                     className={`flex items-center gap-1.5 px-2 py-1 rounded text-[9px] font-black uppercase transition-all ${isPreviewMode ? 'bg-blue-500 text-white' : 'hover:bg-white/10 text-slate-400'}`}
                                 >
                                     {isPreviewMode ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
@@ -351,11 +365,49 @@ if (charCount >= maxLength) {
                                         }
                                     }}
                                     placeholder="Type your question here... (Markdown supported)"
-                                    className="w-full h-32 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-4 text-slate-900 dark:text-white placeholder:text-slate-600 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/20 transition-all resize-none"
+                                    className={`w-full h-32 bg-slate-100 dark:bg-white/5 border rounded-2xl p-4 text-slate-900 dark:text-white placeholder:text-slate-600 focus:outline-none focus:ring-1 transition-all resize-none ${
+                                        isTooLong
+                                            ? "border-red-500/50 focus:border-red-500/50 focus:ring-red-500/20"
+                                            : isTooShort
+                                            ? "border-yellow-500/50 focus:border-yellow-500/50 focus:ring-yellow-500/20"
+                                            : charCount >= minLength
+                                            ? "border-green-500/50 focus:border-green-500/50 focus:ring-green-500/20"
+                                            : "border-slate-200 dark:border-white/10 focus:border-blue-500/50 focus:ring-blue-500/20"
+                                    }`}
                                 />
-                                <p className={`text-xs text-right mt-1 ${colorClass}`}>
-                                    {charCount} / {maxLength}
-                                </p>
+
+                                {/* Progress Bar */}
+                                <div className="mt-2 h-1 w-full bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden">
+                                    <div
+                                        className={`h-full rounded-full transition-all duration-300 ${progressBarColor}`}
+                                        style={{ width: `${progressPercent}%` }}
+                                    />
+                                </div>
+
+                                {/* Counter + Validation Message */}
+                                <div className="flex items-center justify-between mt-1 px-1">
+                                    <div className="text-xs">
+                                        {isTooLong && (
+                                            <span className="text-red-500 font-semibold">
+                                                {charCount - maxLength} characters over limit
+                                            </span>
+                                        )}
+                                        {isTooShort && !isTooLong && (
+                                            <span className="text-yellow-400 font-semibold">
+                                                {minLength - content.trim().length} more characters needed
+                                            </span>
+                                        )}
+                                        {!isTooShort && !isTooLong && charCount >= minLength && (
+                                            <span className="text-green-400 font-semibold">Looks good!</span>
+                                        )}
+                                        {charCount === 0 && (
+                                            <span className="text-slate-500">Min {minLength} · Max {maxLength} characters</span>
+                                        )}
+                                    </div>
+                                    <span className={`text-xs font-semibold ${colorClass}`}>
+                                        {charCount} / {maxLength}
+                                    </span>
+                                </div>
                             </>
                         )}
                     </div>
@@ -417,7 +469,7 @@ if (charCount >= maxLength) {
                             <label className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500 dark:text-slate-500">Attach Visual or PDF (Max 5MB)</label>
                             <span className="text-[9px] text-slate-500 dark:text-slate-500 font-bold uppercase tracking-widest">PNG, JPG, GIF, WEBP, PDF</span>
                         </div>
-                        <div 
+                        <div
                             className="relative group"
                             onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
                             onDragLeave={() => setIsDragging(false)}
@@ -429,7 +481,7 @@ if (charCount >= maxLength) {
                                 accept="image/png,image/jpeg,image/gif,image/webp,application/pdf"
                                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                             />
-                            <div className={`w-full py-8 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center gap-3 transition-all ${ isDragging ? 'bg-blue-500/10 border-blue-500/50 scale-[0.99]' : 'bg-white/[0.02] border-white/10 group-hover:bg-white/[0.05] group-hover:border-blue-500/30' }`}>
+                            <div className={`w-full py-8 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center gap-3 transition-all ${isDragging ? 'bg-blue-500/10 border-blue-500/50 scale-[0.99]' : 'bg-white/[0.02] border-white/10 group-hover:bg-white/[0.05] group-hover:border-blue-500/30'}`}>
                                 {fileName ? (
                                     imageUrl.startsWith("data:application/pdf") ? (
                                         <div className="flex flex-col items-center gap-2 px-6 text-center z-20">
@@ -440,7 +492,7 @@ if (charCount >= maxLength) {
                                                 <p className="text-sm text-slate-900 dark:text-white font-bold max-w-xs truncate">{fileName}</p>
                                                 {fileSize && <p className="text-[10px] text-slate-600 dark:text-slate-400 font-bold uppercase tracking-widest mt-0.5">PDF Document • {fileSize} MB</p>}
                                             </div>
-                                            <button 
+                                            <button
                                                 type="button"
                                                 onClick={(e) => { e.stopPropagation(); setFileName(""); setImageUrl(""); setFileSize(""); }}
                                                 className="mt-2 text-[10px] bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-slate-900 dark:hover:text-white px-4 py-1.5 rounded-xl font-black uppercase tracking-widest transition-all z-20"
@@ -457,7 +509,7 @@ if (charCount >= maxLength) {
                                                 <p className="text-xs text-slate-900 dark:text-white font-bold max-w-xs truncate">{fileName}</p>
                                                 {fileSize && <p className="text-[10px] text-slate-600 dark:text-slate-400 font-bold uppercase tracking-widest mt-0.5">Visual Image • {fileSize} MB</p>}
                                             </div>
-                                            <button 
+                                            <button
                                                 type="button"
                                                 onClick={(e) => { e.stopPropagation(); setFileName(""); setImageUrl(""); setFileSize(""); }}
                                                 className="text-[10px] bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-slate-900 dark:hover:text-white px-4 py-1 rounded-xl font-black uppercase tracking-widest transition-all z-20"
@@ -468,7 +520,7 @@ if (charCount >= maxLength) {
                                     )
                                 ) : (
                                     <>
-                                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${ isDragging ? 'bg-blue-600/20 text-blue-400 scale-110' : 'bg-slate-800 text-slate-500 group-hover:text-blue-400 group-hover:scale-105' }`}>
+                                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${isDragging ? 'bg-blue-600/20 text-blue-400 scale-110' : 'bg-slate-800 text-slate-500 group-hover:text-blue-400 group-hover:scale-105'}`}>
                                             <Upload className="w-7 h-7" />
                                         </div>
                                         <div className="text-center px-4">
@@ -495,7 +547,7 @@ if (charCount >= maxLength) {
                         </button>
                         <button
                             type="submit"
-                            disabled={isSubmitting || (!content.trim() && !imageUrl) || !subject.trim()}
+                            disabled={isSubmitting || (!content.trim() && !imageUrl) || !subject.trim() || isTooLong || (hasContent && isTooShort)}
                             className="flex-[2] py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-bold transition-all shadow-lg shadow-blue-600/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
                             {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
