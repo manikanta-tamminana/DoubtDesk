@@ -3,14 +3,20 @@ import { doubtTagsTable, doubtsTable, likesTable, classroomsTable, repliesTable,
 import { and, eq, isNull, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { currentUser } from "@clerk/nextjs/server";
+import { parseAndValidateRequest } from "@/lib/validations/validate";
+import { updateDoubtActionSchema } from "@/lib/validations/doubt";
 import { DOUBT_STATUS, DoubtStatus, isValidDoubtStatus } from "@/lib/doubtStatus";
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
+        const { errorResponse, data } = await parseAndValidateRequest(req, updateDoubtActionSchema);
+        if (errorResponse) return errorResponse;
+
+        const { action, content, subject, imageUrl, userName, replyId, tags = [] } = data;
+
         const user = await currentUser();
         const email = user?.primaryEmailAddress?.emailAddress;
         
-        const { action, content, subject, imageUrl, userName, replyId, status, tags = [] } = await req.json();
         const { id } = await params;
         const doubtId = parseInt(id);
 
@@ -31,19 +37,21 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
         }
 
         if (action === "like") {
-            if (!userName) {
-                return NextResponse.json({ error: "User name required for like" }, { status: 400 });
+            if (!email) {
+                return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
             }
+            
+            const secureUserIdentifier = email;
 
             // Check if already liked
             const existingLike = await db.select()
                 .from(likesTable)
-                .where(and(eq(likesTable.userName, userName), eq(likesTable.doubtId, doubtId)))
+                .where(and(eq(likesTable.userName, secureUserIdentifier), eq(likesTable.doubtId, doubtId)))
                 .limit(1);
 
             if (existingLike.length > 0) {
                 await db.delete(likesTable)
-                    .where(and(eq(likesTable.userName, userName), eq(likesTable.doubtId, doubtId)));
+                    .where(and(eq(likesTable.userName, secureUserIdentifier), eq(likesTable.doubtId, doubtId)));
                 
                 const updated = await db.update(doubtsTable)
                     .set({ likes: sql`${doubtsTable.likes} - 1` })
@@ -53,7 +61,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
                 return NextResponse.json({ ...updated[0], hasLiked: false });
             } else {
                 await db.insert(likesTable).values({
-                    userName,
+                    userName: secureUserIdentifier,
                     doubtId
                 });
 
