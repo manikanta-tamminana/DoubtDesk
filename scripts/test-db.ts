@@ -21,16 +21,16 @@ async function testQuery() {
     const email = allRecords[0].userEmail;
     console.log("Testing with email:", email);
 
-    const sessions = await db
-      .select({
-        chatId: chatHistoryTable.chatId,
-        chatTitle: sql<string>`MAX(${chatHistoryTable.chatTitle})`,
-        createdAt: sql<string>`MAX(${chatHistoryTable.createdAt})`,
-      })
-      .from(chatHistoryTable)
-      .where(eq(chatHistoryTable.userEmail, email))
-      .groupBy(chatHistoryTable.chatId)
-      .orderBy(desc(sql`MAX(${chatHistoryTable.createdAt})`));
+        const sessions = await db
+            .select({
+                chatId: chatHistoryTable.chatId,
+                chatTitle: sql<string>`MAX(${chatHistoryTable.chatTitle})`,
+                createdAt: sql<string>`MAX(${chatHistoryTable.createdAt})`,
+            })
+            .from(chatHistoryTable)
+            .where(eq(chatHistoryTable.userEmail, email))
+            .groupBy(chatHistoryTable.chatId)
+            .orderBy(desc(sql`MAX(${chatHistoryTable.createdAt})`));
 
     console.log("Query Successful!");
     console.log("Results count:", sessions.length);
