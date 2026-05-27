@@ -23,6 +23,7 @@ export async function POST(req: Request) {
 
         if (email) {
             const { isBlocked, errorResponse: blockResponse } = await checkUserBlock(email);
+            if (blockResponse) return blockResponse;
             if (isBlocked) return blockResponse;
         }
 
