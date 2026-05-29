@@ -80,7 +80,7 @@ export default function InfiniteDoubtFeed({
                     <button
                         onClick={emptyAction}
                         className="text-blue-500 font-black uppercase tracking-widest text-[10px] hover:underline underline-offset-4"
-                    >
+                     aria-label="Interactive button">
                         {emptyActionLabel}
                     </button>
                 )}

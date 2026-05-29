@@ -83,6 +83,7 @@ export default function PublicRoomPage() {
         </div>
         <button 
           onClick={() => setIsAskModalOpen(true)}
+          aria-label="Ask a Doubt"
           className="flex items-center gap-3 px-6 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold uppercase tracking-wider text-xs transition-all duration-300 shadow-lg shadow-blue-600/10 active:scale-[0.98] shrink-0"
         >
           <Plus className="w-5 h-5" />
@@ -121,6 +122,7 @@ export default function PublicRoomPage() {
           </p>
           <button 
             onClick={() => setIsAskModalOpen(true)}
+            aria-label="Post the first doubt"
             className="px-6 py-3.5 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800/60 rounded-xl font-bold uppercase tracking-wider text-xs transition-all duration-300 shadow-sm"
           >
             Post the first doubt
