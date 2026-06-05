@@ -10,21 +10,17 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-ARG NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_c3VyZS1nbnUtNjAuY2xlcmsuYWNjb3VudHMuZGV2JA
+ARG NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
 ARG NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ARG NEXT_PUBLIC_APP_URL=http://localhost:3000
 
 ENV NEXT_TELEMETRY_DISABLED=1 \
     NODE_ENV=production \
-    DATABASE_URL=postgresql://user:password@host/database?sslmode=require \
-    CLERK_SECRET_KEY=sk_test_placeholder \
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY} \
     NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in \
     NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up \
     NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL} \
-    NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL} \
-    GROQ_API_KEY=gsk_placeholder \
-    UNSUBSCRIBE_SECRET=placeholder_unsubscribe_secret
+    NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
 
 RUN npm run build
 
