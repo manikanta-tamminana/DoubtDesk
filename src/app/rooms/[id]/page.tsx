@@ -850,7 +850,7 @@ function ClassroomInsightsView({
 
     const fetchData = () => {
         setLoading(true);
-        fetch(`/api/analytics?classroomId={classroomId}`)
+        fetch(`/api/analytics?classroomId=${classroomId}`)
             .then(res => res.json())
             .then(d => {
                 setData(d);
