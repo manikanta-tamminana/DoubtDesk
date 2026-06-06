@@ -9,6 +9,7 @@ import {
 import { useEffect, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useAppUser } from "../../provider";
+import AnalyticsExportButton from "@/components/AnalyticsExportButton";
 import {
   Brain,
   MessageSquare,
@@ -81,32 +82,25 @@ export default function ClassroomPage() {
   const searchParams = useSearchParams();
   const { appUser } = useAppUser();
 
-  const [classroom, setClassroom] = useState<Classroom | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("ask-ai");
-  const [activeAIDoubt, setActiveAIDoubt] = useState<Doubt | null>(null);
-  const [isAskModalOpen, setIsAskModalOpen] = useState(false);
-  const [isCodeModalOpen, setIsCodeModalOpen] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const [inviteUrl, setInviteUrl] = useState("");
-  const [inviteExpiresAt, setInviteExpiresAt] = useState("");
-  const [isGeneratingInvite, setIsGeneratingInvite] = useState(false);
-  const [inviteCopied, setInviteCopied] = useState(false);
-  const [doubtFilter, setDoubtFilter] = useState<
-    "unsolved" | "in-progress" | "solved"
-  >("unsolved");
-  const [searchVal, setSearchVal] = useState("");
-  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
-  const [pedagogyLevel, setPedagogyLevel] = useState("");
-  const [targetGrade, setTargetGrade] = useState("");
-  const [pedagogyProfile, setPedagogyProfile] = useState<any>(null);
+    const [classroom, setClassroom] = useState<Classroom | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState("ask-ai");
+    const [activeAIDoubt, setActiveAIDoubt] = useState<Doubt | null>(null);
+    const [isAskModalOpen, setIsAskModalOpen] = useState(false);
+    const [isCodeModalOpen, setIsCodeModalOpen] = useState(false);
+    const [copied, setCopied] = useState(false);
+    const [doubtFilter, setDoubtFilter] = useState<'unsolved' | 'in-progress' | 'solved'>('unsolved');
+    const [searchVal, setSearchVal] = useState("");
+    const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+    const [pedagogyLevel, setPedagogyLevel] = useState('');
+    const [targetGrade, setTargetGrade] = useState('');
+    const [pedagogyProfile, setPedagogyProfile] = useState<any>(null);
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [subjectFilter, setSubjectFilter] = useState("All");
-  const [tagFilter, setTagFilter] = useState("");
-  const sort = (searchParams.get("sort") as DoubtSortValue) || "newest";
-  const notificationTab = searchParams.get("tab");
-  const hasTeacherAccess = isTeacherRole(classroom?.role);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [subjectFilter, setSubjectFilter] = useState("All");
+    const [tagFilter, setTagFilter] = useState("");
+    const sort = (searchParams.get("sort") as DoubtSortValue) || "newest";
+    const notificationTab = searchParams.get("tab");
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -238,68 +232,18 @@ export default function ClassroomPage() {
     }
   }, [classroom?.id]);
 
-  const copyCode = async () => {
-    if (classroom?.inviteCode) {
-      try {
-        await navigator.clipboard.writeText(classroom.inviteCode);
-        setCopied(true);
-        toast.success("Invite code copied!", {
-          id: `copy-invite-${classroom.inviteCode}`,
-        });
-        setTimeout(() => setCopied(false), 2000);
-      } catch (err) {
-        toast.error("Failed to copy invite code", {
-          id: `copy-invite-error-${classroom.inviteCode}`,
-        });
-      }
-    }
-  };
-
-  const generateInviteLink = async () => {
-    if (!classroom?.id) return;
-
-    setIsGeneratingInvite(true);
-
-    try {
-      const response = await fetch(`/api/classrooms/${classroom.id}/invites`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          expiresInHours: 168,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        toast.error(data.error || "Failed to generate invite link");
-        return;
-      }
-
-      setInviteUrl(data.inviteUrl);
-      setInviteExpiresAt(data.expiresAt);
-      toast.success("Secure invite link generated!");
-    } catch (err) {
-      toast.error("Failed to generate invite link");
-    } finally {
-      setIsGeneratingInvite(false);
-    }
-  };
-
-  const copyInviteLink = async () => {
-    if (!inviteUrl) return;
-
-    try {
-      await navigator.clipboard.writeText(inviteUrl);
-      setInviteCopied(true);
-      toast.success("Invite link copied!");
-      setTimeout(() => setInviteCopied(false), 2000);
-    } catch (err) {
-      toast.error("Failed to copy invite link");
-    }
-  };
+    const copyCode = async () => {
+        if (classroom?.inviteCode) {
+            try {
+                await navigator.clipboard.writeText(classroom.inviteCode);
+                setCopied(true);
+                toast.success("Invite code copied!", { id: `copy-invite-${classroom.inviteCode}` });
+                setTimeout(() => setCopied(false), 2000);
+            } catch (err) {
+                toast.error("Failed to copy invite code", { id: `copy-invite-error-${classroom.inviteCode}` });
+            }
+        }
+    };
 
   if (loading) {
     return (
@@ -325,31 +269,26 @@ export default function ClassroomPage() {
               <ChevronLeft className="w-4 h-4" /> Back to Campus
             </button>
 
-            <div className="flex items-center gap-3 flex-wrap w-full sm:w-auto justify-start sm:justify-end">
-              <ExportButton
-                classroomId={String(id)}
-                classroomName={classroom?.name || ""}
-                isTeacher={hasTeacherAccess}
-              />
-
-              {hasTeacherAccess && (
-                <button
-                  onClick={() => setIsCodeModalOpen(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800/60 hover:text-slate-900 dark:hover:text-white transition-all duration-300 shadow-sm shrink-0"
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />{" "}
-                  Invite Students
-                </button>
-              )}
-              <button
-                onClick={() => router.push(`/rooms/${id}/members`)}
-                className="flex items-center gap-2 px-4 py-2 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800/60 hover:text-slate-900 dark:hover:text-white transition-all duration-300 shadow-sm shrink-0"
-              >
-                <User2Icon className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />{" "}
-                All members
-              </button>
-            </div>
-          </div>
+                        <div className="flex items-center gap-3 flex-wrap w-full sm:w-auto justify-start sm:justify-end">
+                            <ExportButton 
+                                classroomId={String(id)} 
+                                classroomName={classroom?.name || ""} 
+                                isTeacher={classroom?.role === "teacher"} 
+                            />
+                            <button
+                                onClick={() => setIsCodeModalOpen(true)}
+                                className="flex items-center gap-2 px-4 py-2 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800/60 hover:text-slate-900 dark:hover:text-white transition-all duration-300 shadow-sm shrink-0"
+                            >
+                                <Sparkles className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" /> Class Code
+                            </button>
+                            <button
+                                onClick={() => router.push(`/rooms/${id}/members`)}
+                                className="flex items-center gap-2 px-4 py-2 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800/60 hover:text-slate-900 dark:hover:text-white transition-all duration-300 shadow-sm shrink-0"
+                            >
+                                <User2Icon className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" /> All members
+                            </button>
+                        </div>
+                    </div>
 
           <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 min-w-0">
             <div className="space-y-4 min-w-0">
@@ -378,32 +317,25 @@ export default function ClassroomPage() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2 overflow-x-auto whitespace-nowrap pb-1 scrollbar-hide w-full xl:w-auto max-w-full">
-              {[
-                { id: "ask-ai", label: "Ask AI", icon: Brain },
-                { id: "community", label: "Community", icon: MessageSquare },
-                {
-                  id: "teacher-doubts",
-                  label:
-                    hasTeacherAccess
-                      ? "Students Doubt"
-                      : "Ask Teacher",
-                  icon: GraduationCap,
-                },
-                { id: "insights", label: "Insights", icon: TrendingUp },
-              ].map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2.5 px-4 py-2 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all duration-300 border shrink-0 whitespace-nowrap ${activeTab === tab.id ? "bg-purple-600 border-purple-500 text-white shadow-lg shadow-purple-600/10" : "bg-white dark:bg-zinc-950/20 border-slate-200 dark:border-zinc-900 text-slate-500 dark:text-zinc-400 hover:bg-slate-50 dark:hover:bg-zinc-900/40"}`}
-                >
-                  <tab.icon className="w-4 h-4 shrink-0" /> {tab.label}
-                </button>
-              ))}
+                        <div className="flex items-center gap-2 overflow-x-auto whitespace-nowrap pb-1 scrollbar-hide w-full xl:w-auto max-w-full">
+                            {[
+                                { id: "ask-ai", label: "Ask AI", icon: Brain },
+                                { id: "community", label: "Community", icon: MessageSquare },
+                                { id: "teacher-doubts", label: classroom?.role === 'teacher' ? "Students Doubt" : "Ask Teacher", icon: GraduationCap },
+                                { id: "insights", label: "Insights", icon: TrendingUp }
+                            ].map((tab) => (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => setActiveTab(tab.id)}
+                                    className={`flex items-center gap-2.5 px-4 py-2 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all duration-300 border shrink-0 whitespace-nowrap ${ activeTab === tab.id ? "bg-purple-600 border-purple-500 text-white shadow-lg shadow-purple-600/10" : "bg-white dark:bg-zinc-950/20 border-slate-200 dark:border-zinc-900 text-slate-500 dark:text-zinc-400 hover:bg-slate-50 dark:hover:bg-zinc-900/40" }`}
+                                >
+                                    <tab.icon className="w-4 h-4 shrink-0" /> {tab.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
             </div>
-          </div>
-        </div>
-      </div>
 
       <div className="max-w-7xl mx-auto px-4 md:px-12 pb-2 flex justify-end relative z-10 mt-6">
         {activeTab !== "ask-ai" && activeTab !== "insights" && (
@@ -560,156 +492,106 @@ export default function ClassroomPage() {
               </div>
             </div>
 
-            {doubtsLoading ? (
-              <div className="h-[300px] flex items-center justify-center">
-                <Loader2 className="w-6 h-6 text-purple-500 animate-spin" />
-              </div>
-            ) : doubts.length === 0 ? (
-              <div className="py-20 text-center space-y-4 bg-slate-50/30 dark:bg-zinc-950/10 border border-dashed border-slate-200 dark:border-zinc-800 rounded-2xl">
-                <div className="w-16 h-16 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl flex items-center justify-center mx-auto mb-2 shadow-sm">
-                  <MessageSquare className="w-7 h-7 text-slate-400 dark:text-zinc-600" />
-                </div>
-                <div className="space-y-1">
-                  <h3 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
-                    {searchQuery
-                      ? "No matching doubts"
-                      : "No community posts yet."}
-                  </h3>
-                  <p className="text-slate-500 dark:text-zinc-400 text-xs font-medium max-w-lg mx-auto leading-relaxed">
-                    {searchQuery
-                      ? `We couldn't find anything for "${searchQuery}" in this classroom.`
-                      : "Be the first to start a discussion or ask a question to your classmates."}
-                  </p>
-                </div>
-                {searchQuery ? (
-                  <button
-                    onClick={() => setSearchVal("")}
-                    className="px-5 py-2 bg-white dark:bg-zinc-900 text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-800 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-300 mx-auto block shadow-sm"
-                  >
-                    Clear Search
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => setIsAskModalOpen(true)}
-                    className="text-blue-600 dark:text-blue-400 font-bold uppercase tracking-wider text-xs hover:underline underline-offset-4 mx-auto block transition-all"
-                  >
-                    Be the first to ask
-                  </button>
+                        {doubtsLoading ? (
+                            <div className="h-[300px] flex items-center justify-center">
+                                <Loader2 className="w-6 h-6 text-purple-500 animate-spin" />
+                            </div>
+                        ) : doubts.length === 0 ? (
+                            <div className="py-20 text-center space-y-4 bg-slate-50/30 dark:bg-zinc-950/10 border border-dashed border-slate-200 dark:border-zinc-800 rounded-2xl">
+                                <div className="w-16 h-16 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl flex items-center justify-center mx-auto mb-2 shadow-sm">
+                                    <MessageSquare className="w-7 h-7 text-slate-400 dark:text-zinc-600" />
+                                </div>
+                                <div className="space-y-1">
+                                    <h3 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
+                                        {searchQuery ? "No matching doubts" : "No community posts yet."}
+                                    </h3>
+                                    <p className="text-slate-500 dark:text-zinc-400 text-xs font-medium max-w-sm mx-auto leading-relaxed">
+                                        {searchQuery 
+                                            ? `We couldn't find anything for "${searchQuery}" in this classroom.` 
+                                            : "Be the first to start a discussion or ask a question to your classmates."}
+                                    </p>
+                                </div>
+                                {searchQuery ? (
+                                    <button 
+                                        onClick={() => setSearchVal("")}
+                                        className="px-5 py-2 bg-white dark:bg-zinc-900 text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-800 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-300 mx-auto block shadow-sm"
+                                    >
+                                        Clear Search
+                                    </button>
+                                ) : (
+                                    <button onClick={() => setIsAskModalOpen(true)} className="text-blue-600 dark:text-blue-400 font-bold uppercase tracking-wider text-xs hover:underline underline-offset-4 mx-auto block transition-all">Be the first to ask</button>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="space-y-8 animate-in fade-in duration-500">
+                                {doubtFilter === 'unsolved' && (
+                                    <div className="space-y-6">
+                                        <div className="flex items-center gap-4">
+                                            <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-slate-200 dark:via-zinc-900 to-transparent"></div>
+                                            <h3 className="text-[11px] font-bold uppercase tracking-wider text-red-600 dark:text-red-400 bg-red-500/5 px-4 py-1.5 rounded-full border border-red-500/10">Unsolved Queries</h3>
+                                            <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-slate-200 dark:via-zinc-900 to-transparent"></div>
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                            {Array.isArray(doubts) && doubts.filter((d) => d.isSolved === "unsolved" || (!d.isSolved)).map((doubt) => (
+                                                <DoubtCard key={doubt.id} doubt={doubt} role={classroom?.role} onUpdate={() => mutate()} />
+                                             ))}
+                                            {(!Array.isArray(doubts) || doubts.filter((d) => d.isSolved === "unsolved" || (!d.isSolved)).length === 0) && (
+                                                <div className="col-span-full py-12 text-center text-slate-500 dark:text-slate-500 text-[10px] uppercase font-black tracking-widest opacity-40">
+                                                    No unsolved queries in this category.
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                                {doubtFilter === 'in-progress' && (
+                                    <div className="space-y-6">
+                                        <div className="flex items-center gap-4">
+                                            <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-slate-200 dark:via-zinc-900 to-transparent"></div>
+                                            <h3 className="text-[11px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 bg-amber-500/5 px-4 py-1.5 rounded-full border border-amber-500/10">In Progress</h3>
+                                            <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-slate-200 dark:via-zinc-900 to-transparent"></div>
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                            {Array.isArray(doubts) && doubts.filter((d) => d.isSolved === "in-progress").map((doubt) => (
+                                                <DoubtCard key={doubt.id} doubt={doubt} role={classroom?.role} onUpdate={() => mutate()} />
+                                             ))}
+                                            {(!Array.isArray(doubts) || doubts.filter((d) => d.isSolved === "in-progress").length === 0) && (
+                                                <div className="col-span-full py-12 text-center text-slate-500 dark:text-slate-500 text-[10px] uppercase font-black tracking-widest opacity-40">
+                                                    No doubts in progress right now.
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                                {doubtFilter === 'solved' && (
+                                    <div className="space-y-6">
+                                        <div className="flex items-center gap-4">
+                                            <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-slate-200 dark:via-zinc-900 to-transparent"></div>
+                                            <h3 className="text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 bg-emerald-500/5 px-4 py-1.5 rounded-full border border-emerald-500/10">Resolved & Validated</h3>
+                                            <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-slate-200 dark:via-zinc-900 to-transparent"></div>
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                            {Array.isArray(doubts) && doubts.filter((d) => d.isSolved === "solved").map((doubt) => (
+                                                <DoubtCard key={doubt.id} doubt={doubt} role={classroom?.role} onUpdate={() => mutate()} />
+                                            ))}
+                                            {(!Array.isArray(doubts) || doubts.filter((d) => d.isSolved === "solved").length === 0) && (
+                                                <div className="col-span-full py-12 text-center text-slate-500 dark:text-slate-500 text-[10px] uppercase font-black tracking-widest opacity-40">
+                                                    No resolved queries yet.
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
                 )}
-              </div>
-            ) : (
-              <div className="space-y-8 animate-in fade-in duration-500">
-                {doubtFilter === "unsolved" && (
-                  <div className="space-y-6">
-                    <div className="flex items-center gap-4">
-                      <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-slate-200 dark:via-zinc-900 to-transparent"></div>
-                      <h3 className="text-[11px] font-bold uppercase tracking-wider text-red-600 dark:text-red-400 bg-red-500/5 px-4 py-1.5 rounded-full border border-red-500/10">
-                        Unsolved Queries
-                      </h3>
-                      <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-slate-200 dark:via-zinc-900 to-transparent"></div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      {Array.isArray(doubts) &&
-                        doubts
-                          .filter(
-                            (d) => d.isSolved === "unsolved" || !d.isSolved,
-                          )
-                          .map((doubt) => (
-                            <DoubtCard
-                              key={doubt.id}
-                              doubt={doubt}
-                              role={classroom?.role}
-                              onUpdate={() => mutate()}
-                            />
-                          ))}
-                      {(!Array.isArray(doubts) ||
-                        doubts.filter(
-                          (d) => d.isSolved === "unsolved" || !d.isSolved,
-                        ).length === 0) && (
-                        <div className="col-span-full py-12 text-center text-slate-500 dark:text-slate-500 text-[10px] uppercase font-black tracking-widest opacity-40">
-                          No unsolved queries in this category.
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-                {doubtFilter === "in-progress" && (
-                  <div className="space-y-6">
-                    <div className="flex items-center gap-4">
-                      <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-slate-200 dark:via-zinc-900 to-transparent"></div>
-                      <h3 className="text-[11px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 bg-amber-500/5 px-4 py-1.5 rounded-full border border-amber-500/10">
-                        In Progress
-                      </h3>
-                      <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-slate-200 dark:via-zinc-900 to-transparent"></div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      {Array.isArray(doubts) &&
-                        doubts
-                          .filter((d) => d.isSolved === "in-progress")
-                          .map((doubt) => (
-                            <DoubtCard
-                              key={doubt.id}
-                              doubt={doubt}
-                              role={classroom?.role}
-                              onUpdate={() => mutate()}
-                            />
-                          ))}
-                      {(!Array.isArray(doubts) ||
-                        doubts.filter((d) => d.isSolved === "in-progress")
-                          .length === 0) && (
-                        <div className="col-span-full py-12 text-center text-slate-500 dark:text-slate-500 text-[10px] uppercase font-black tracking-widest opacity-40">
-                          No doubts in progress right now.
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-                {doubtFilter === "solved" && (
-                  <div className="space-y-6">
-                    <div className="flex items-center gap-4">
-                      <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-slate-200 dark:via-zinc-900 to-transparent"></div>
-                      <h3 className="text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 bg-emerald-500/5 px-4 py-1.5 rounded-full border border-emerald-500/10">
-                        Resolved & Validated
-                      </h3>
-                      <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-slate-200 dark:via-zinc-900 to-transparent"></div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      {Array.isArray(doubts) &&
-                        doubts
-                          .filter((d) => d.isSolved === "solved")
-                          .map((doubt) => (
-                            <DoubtCard
-                              key={doubt.id}
-                              doubt={doubt}
-                              role={classroom?.role}
-                              onUpdate={() => mutate()}
-                            />
-                          ))}
-                      {(!Array.isArray(doubts) ||
-                        doubts.filter((d) => d.isSolved === "solved").length ===
-                          0) && (
-                        <div className="col-span-full py-12 text-center text-slate-500 dark:text-slate-500 text-[10px] uppercase font-black tracking-widest opacity-40">
-                          No resolved queries yet.
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
 
-        {activeTab === "teacher-doubts" && (
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/50 dark:bg-zinc-950/20 border border-slate-200 dark:border-zinc-900 p-4 rounded-xl shadow-sm">
-              <h2 className="text-lg font-bold tracking-tight px-2">
-                {hasTeacherAccess ? (
-                  <>Students Doubts</>
-                ) : (
-                  <>Direct Teacher Doubts</>
-                )}
-              </h2>
+                {activeTab === "teacher-doubts" && (
+                    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
+                        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/50 dark:bg-zinc-950/20 border border-slate-200 dark:border-zinc-900 p-4 rounded-xl shadow-sm">
+                            <h2 className="text-lg font-bold tracking-tight px-2">
+                                {classroom?.role === 'teacher' ? <>Students Doubts</> : <>Direct Teacher Doubts</>}
+                            </h2>
 
               <div className="flex items-center gap-1.5 bg-white dark:bg-zinc-900 p-1.5 rounded-xl border border-slate-200 dark:border-zinc-800">
                 <button
@@ -732,32 +614,32 @@ export default function ClassroomPage() {
                 </button>
               </div>
 
-              <div className="flex items-center gap-3 w-full sm:w-auto">
-                <input
-                  type="text"
-                  value={tagFilter}
-                  onChange={(e) => setTagFilter(e.target.value)}
-                  placeholder="Filter tag"
-                  className="w-full sm:w-32 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl px-3 py-2 text-xs font-medium text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-purple-500/50"
-                />
-                {tagFilter && (
-                  <button
-                    onClick={() => setTagFilter("")}
-                    className="text-[11px] font-bold uppercase tracking-wider text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
-                  >
-                    Clear
-                  </button>
-                )}
-                {!hasTeacherAccess && (
-                  <button
-                    onClick={() => setIsAskModalOpen(true)}
-                    className="px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold uppercase tracking-wider text-xs transition-all duration-300 shadow-md shadow-purple-600/10 flex items-center gap-2 shrink-0"
-                  >
-                    <Plus className="w-4 h-4" /> Ask Teacher
-                  </button>
-                )}
-              </div>
-            </div>
+                            <div className="flex items-center gap-3 w-full sm:w-auto">
+                                <input
+                                    type="text"
+                                    value={tagFilter}
+                                    onChange={(e) => setTagFilter(e.target.value)}
+                                    placeholder="Filter tag"
+                                    className="w-full sm:w-32 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl px-3 py-2 text-xs font-medium text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-purple-500/50"
+                                />
+                                {tagFilter && (
+                                    <button
+                                        onClick={() => setTagFilter("")}
+                                        className="text-[11px] font-bold uppercase tracking-wider text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+                                    >
+                                        Clear
+                                    </button>
+                                )}
+                                {classroom?.role !== 'teacher' && (
+                                    <button
+                                        onClick={() => setIsAskModalOpen(true)}
+                                        className="px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold uppercase tracking-wider text-xs transition-all duration-300 shadow-md shadow-purple-600/10 flex items-center gap-2 shrink-0"
+                                    >
+                                        <Plus className="w-4 h-4" /> Ask Teacher
+                                    </button>
+                                )}
+                            </div>
+                        </div>
 
             <div className="flex flex-col md:flex-row items-center gap-4">
               <div className="relative flex-1 w-full group">
@@ -794,125 +676,79 @@ export default function ClassroomPage() {
               </div>
             </div>
 
-            {doubtsLoading ? (
-              <div className="h-[300px] flex items-center justify-center">
-                <Loader2 className="w-6 h-6 text-purple-500 animate-spin" />
-              </div>
-            ) : (
-              <div className="space-y-8 animate-in fade-in duration-500">
-                {doubtFilter === "unsolved" && (
-                  <div className="space-y-6">
-                    <div className="flex items-center gap-4">
-                      <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-slate-200 dark:via-zinc-900 to-transparent"></div>
-                      <h3 className="text-[11px] font-bold uppercase tracking-wider text-red-600 dark:text-red-400 bg-red-500/5 px-4 py-1.5 rounded-full border border-red-500/10">
-                        Unsolved Doubts
-                      </h3>
-                      <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-slate-200 dark:via-zinc-900 to-transparent"></div>
+                        {doubtsLoading ? (
+                            <div className="h-[300px] flex items-center justify-center">
+                                <Loader2 className="w-6 h-6 text-purple-500 animate-spin" />
+                            </div>
+                        ) : (
+                            <div className="space-y-8 animate-in fade-in duration-500">
+                                {doubtFilter === 'unsolved' && (
+                                    <div className="space-y-6">
+                                        <div className="flex items-center gap-4">
+                                            <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-slate-200 dark:via-zinc-900 to-transparent"></div>
+                                            <h3 className="text-[11px] font-bold uppercase tracking-wider text-red-600 dark:text-red-400 bg-red-500/5 px-4 py-1.5 rounded-full border border-red-500/10">Unsolved Doubts</h3>
+                                            <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-slate-200 dark:via-zinc-900 to-transparent"></div>
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                            {Array.isArray(doubts) && doubts.filter((d) => d.isSolved === "unsolved" || (!d.isSolved)).map((doubt) => (
+                                                <DoubtCard key={doubt.id} doubt={doubt} role={classroom?.role} onUpdate={() => mutate()} />
+                                            ))}
+                                            {(!Array.isArray(doubts) || doubts.filter((d) => d.isSolved === "unsolved" || (!d.isSolved)).length === 0) && (
+                                                <div className="col-span-full py-24 text-center space-y-4 bg-slate-100 dark:bg-white/5 border border-dashed border-slate-200 dark:border-white/10 rounded-[2.5rem]">
+                                                    <GraduationCap className="w-12 h-12 text-slate-700 mx-auto" />
+                                                    <p className="text-slate-500 dark:text-slate-500 font-bold uppercase tracking-widest text-xs">
+                                                        {classroom?.role === 'teacher' ? "No unsolved doubts from students." : "No unsolved teacher doubts."}
+                                                    </p>
+                                                    {classroom?.role !== 'teacher' && (
+                                                        <button onClick={() => setIsAskModalOpen(true)} className="text-purple-600 dark:text-purple-400 font-bold uppercase tracking-wider text-xs hover:underline underline-offset-4">Send the first query</button>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                                {doubtFilter === 'in-progress' && (
+                                    <div className="space-y-6">
+                                        <div className="flex items-center gap-4">
+                                            <div className="h-[1px] flex-1 bg-gradient-to-r vom-transparent via-slate-200 dark:via-zinc-900 to-transparent"></div>
+                                            <h3 className="text-[11px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 bg-amber-500/5 px-4 py-1.5 rounded-full border border-amber-500/10">In Progress</h3>
+                                            <div className="h-[1px] flex-1 bg-gradient-to-r vom-transparent via-slate-200 dark:via-zinc-900 to-transparent"></div>
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                            {Array.isArray(doubts) && doubts.filter((d) => d.isSolved === "in-progress").map((doubt) => (
+                                                <DoubtCard key={doubt.id} doubt={doubt} role={classroom?.role} onUpdate={() => mutate()} />
+                                            ))}
+                                            {(!Array.isArray(doubts) || doubts.filter((d) => d.isSolved === "in-progress").length === 0) && (
+                                                <div className="col-span-full py-12 text-center text-slate-500 dark:text-slate-500 text-[10px] uppercase font-black tracking-widest opacity-40">
+                                                    No teacher doubts in progress right now.
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                                {doubtFilter === 'solved' && (
+                                    <div className="space-y-6">
+                                        <div className="flex items-center gap-4">
+                                            <div className="h-[1px] flex-1 bg-gradient-to-r vom-transparent via-slate-200 dark:via-zinc-900 to-transparent"></div>
+                                            <h3 className="text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 bg-emerald-500/5 px-4 py-1.5 rounded-full border border-emerald-500/10">Teacher Resolved</h3>
+                                            <div className="h-[1px] flex-1 bg-gradient-to-r vom-transparent via-slate-200 dark:via-zinc-900 to-transparent"></div>
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                            {Array.isArray(doubts) && doubts.filter((d) => d.isSolved === "solved").map((doubt) => (
+                                                <DoubtCard key={doubt.id} doubt={doubt} role={classroom?.role} onUpdate={() => mutate()} />
+                                            ))}
+                                            {(!Array.isArray(doubts) || doubts.filter((d) => d.isSolved === "solved").length === 0) && (
+                                                <div className="col-span-full py-12 text-center text-slate-500 dark:text-slate-500 text-[10px] uppercase font-black tracking-widest opacity-40">
+                                                    No resolved queries yet.
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      {Array.isArray(doubts) &&
-                        doubts
-                          .filter(
-                            (d) => d.isSolved === "unsolved" || !d.isSolved,
-                          )
-                          .map((doubt) => (
-                            <DoubtCard
-                              key={doubt.id}
-                              doubt={doubt}
-                              role={classroom?.role}
-                              onUpdate={() => mutate()}
-                            />
-                          ))}
-                      {(!Array.isArray(doubts) ||
-                        doubts.filter(
-                          (d) => d.isSolved === "unsolved" || !d.isSolved,
-                        ).length === 0) && (
-                        <div className="col-span-full py-24 text-center space-y-4 bg-slate-100 dark:bg-white/5 border border-dashed border-slate-200 dark:border-white/10 rounded-[2.5rem]">
-                          <GraduationCap className="w-12 h-12 text-slate-700 mx-auto" />
-                          <p className="text-slate-500 dark:text-slate-500 font-bold uppercase tracking-widest text-xs">
-                            {hasTeacherAccess
-                              ? "No unsolved doubts from students."
-                              : "No unsolved teacher doubts."}
-                          </p>
-                          {!hasTeacherAccess && (
-                            <button
-                              onClick={() => setIsAskModalOpen(true)}
-                              className="text-purple-600 dark:text-purple-400 font-bold uppercase tracking-wider text-xs hover:underline underline-offset-4"
-                            >
-                              Send the first query
-                            </button>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
                 )}
-                {doubtFilter === "in-progress" && (
-                  <div className="space-y-6">
-                    <div className="flex items-center gap-4">
-                      <div className="h-[1px] flex-1 bg-gradient-to-r vom-transparent via-slate-200 dark:via-zinc-900 to-transparent"></div>
-                      <h3 className="text-[11px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 bg-amber-500/5 px-4 py-1.5 rounded-full border border-amber-500/10">
-                        In Progress
-                      </h3>
-                      <div className="h-[1px] flex-1 bg-gradient-to-r vom-transparent via-slate-200 dark:via-zinc-900 to-transparent"></div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      {Array.isArray(doubts) &&
-                        doubts
-                          .filter((d) => d.isSolved === "in-progress")
-                          .map((doubt) => (
-                            <DoubtCard
-                              key={doubt.id}
-                              doubt={doubt}
-                              role={classroom?.role}
-                              onUpdate={() => mutate()}
-                            />
-                          ))}
-                      {(!Array.isArray(doubts) ||
-                        doubts.filter((d) => d.isSolved === "in-progress")
-                          .length === 0) && (
-                        <div className="col-span-full py-12 text-center text-slate-500 dark:text-slate-500 text-[10px] uppercase font-black tracking-widest opacity-40">
-                          No teacher doubts in progress right now.
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-                {doubtFilter === "solved" && (
-                  <div className="space-y-6">
-                    <div className="flex items-center gap-4">
-                      <div className="h-[1px] flex-1 bg-gradient-to-r vom-transparent via-slate-200 dark:via-zinc-900 to-transparent"></div>
-                      <h3 className="text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 bg-emerald-500/5 px-4 py-1.5 rounded-full border border-emerald-500/10">
-                        Teacher Resolved
-                      </h3>
-                      <div className="h-[1px] flex-1 bg-gradient-to-r vom-transparent via-slate-200 dark:via-zinc-900 to-transparent"></div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      {Array.isArray(doubts) &&
-                        doubts
-                          .filter((d) => d.isSolved === "solved")
-                          .map((doubt) => (
-                            <DoubtCard
-                              key={doubt.id}
-                              doubt={doubt}
-                              role={classroom?.role}
-                              onUpdate={() => mutate()}
-                            />
-                          ))}
-                      {(!Array.isArray(doubts) ||
-                        doubts.filter((d) => d.isSolved === "solved").length ===
-                          0) && (
-                        <div className="col-span-full py-12 text-center text-slate-500 dark:text-slate-500 text-[10px] uppercase font-black tracking-widest opacity-40">
-                          No resolved queries yet.
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
 
         {activeTab === "insights" && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -961,132 +797,43 @@ export default function ClassroomPage() {
         />
       )}
 
-      {/* INVITE STUDENTS MODAL */}
-      {isCodeModalOpen && hasTeacherAccess && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-xl bg-white/60 dark:bg-black/60 animate-in fade-in duration-300">
-          <div className="bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-900 w-full max-w-lg rounded-2xl p-6 md:p-8 shadow-2xl space-y-6 animate-in zoom-in-95 duration-300 text-slate-900 dark:text-zinc-100">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <h2 className="text-xl font-bold tracking-tight">
-                  Invite Students
-                </h2>
-                <p className="text-slate-400 dark:text-zinc-500 font-bold uppercase tracking-wider text-[10px]">
-                  Generate a secure join link
-                </p>
-              </div>
-              <button
-                onClick={() => setIsCodeModalOpen(false)}
-                className="p-1.5 text-slate-400 dark:text-zinc-500 hover:text-slate-900 dark:hover:text-white transition-colors"
-                aria-label="Close modal"
-              >
-                <Plus className="w-5 h-5 rotate-45" />
-              </button>
-            </div>
+            {/* CLASS CODE MODAL */}
+            {isCodeModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-xl bg-white/60 dark:bg-black/60 animate-in fade-in duration-300">
+                    <div className="bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-900 w-full max-w-sm rounded-2xl p-6 md:p-8 shadow-2xl space-y-6 animate-in zoom-in-95 duration-300 text-slate-900 dark:text-zinc-100">
+                         <div className="flex items-center justify-between">
+                            <div className="space-y-0.5">
+                                <h2 className="text-xl font-bold tracking-tight">Access Key</h2>
+                                <p className="text-slate-400 dark:text-zinc-500 font-bold uppercase tracking-wider text-[10px]">Invite your students</p>
+                            </div>
+                            <button
+                                onClick={() => setIsCodeModalOpen(false)}
+                                className="p-1.5 text-slate-400 dark:text-zinc-500 hover:text-slate-900 dark:hover:text-white transition-colors"
+                                aria-label="Close modal"
+                            >
+                                <Plus className="w-5 h-5 rotate-45" />
+                            </button>
+                        </div>
 
-            <div className="space-y-4">
-              <div className="rounded-xl border border-blue-200 dark:border-blue-900/60 bg-blue-50 dark:bg-blue-950/20 p-4">
-                <div className="flex items-start gap-3">
-                  <Sparkles className="mt-0.5 h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
-                  <div className="space-y-1">
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                      Secure Invite Link
-                    </h3>
-                    <p className="text-xs font-medium leading-relaxed text-slate-600 dark:text-zinc-400">
-                      This creates a non-guessable invite link that expires in 7
-                      days. Students can use it to join this classroom directly.
-                    </p>
-                  </div>
-                </div>
-              </div>
+                        <div className="bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl p-4 flex items-center justify-between gap-4 relative group overflow-hidden shadow-inner">
+                            <code className="text-3xl font-black text-blue-600 dark:text-blue-400 tracking-wider relative z-10">{classroom?.inviteCode}</code>
 
-              <button
-                onClick={generateInviteLink}
-                disabled={isGeneratingInvite}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-xl font-bold uppercase tracking-wider text-[11px] transition-all duration-300 shadow-md shadow-blue-600/10 active:scale-[0.98]"
-                aria-label="Generate secure invite link"
-              >
-                {isGeneratingInvite ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" /> Generating...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-4 h-4" /> Generate Secure Invite Link
-                  </>
-                )}
-              </button>
-
-              {inviteUrl && (
-                <div className="space-y-3">
-                  <div className="rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 p-4">
-                    <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">
-                      Invite link
-                    </p>
-                    <div className="flex flex-col sm:flex-row gap-2">
-                      <input
-                        value={inviteUrl}
-                        readOnly
-                        className="min-w-0 flex-1 rounded-lg border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3 py-2 text-xs font-medium text-slate-700 dark:text-zinc-300 outline-none"
-                      />
-                      <button
-                        onClick={copyInviteLink}
-                        className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold uppercase tracking-wider text-[10px] transition-all duration-300"
-                        aria-label="Copy invite link"
-                      >
-                        {inviteCopied ? (
-                          <>
-                            <Check className="w-3.5 h-3.5" /> Copied
-                          </>
-                        ) : (
-                          <>
-                            <Copy className="w-3.5 h-3.5" /> Copy
-                          </>
-                        )}
-                      </button>
+                            <button
+                                onClick={copyCode}
+                                className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold uppercase tracking-wider text-[10px] transition-all duration-300 shadow-md shadow-blue-600/10 active:scale-[0.98] relative z-10"
+                             aria-label="Interactive button">
+                                {copied ? (
+                                    <><Check className="w-3.5 h-3.5" /> Copied!</>
+                                ) : (
+                                    <><Copy className="w-3.5 h-3.5" /> Copy Key</>
+                                )}
+                            </button>
+                        </div>
                     </div>
-                  </div>
-
-                  {inviteExpiresAt && (
-                    <p className="text-center text-[11px] font-semibold text-slate-500 dark:text-zinc-500">
-                      Expires on {new Date(inviteExpiresAt).toLocaleString()}
-                    </p>
-                  )}
                 </div>
-              )}
-            </div>
-
-            <div className="border-t border-slate-200 dark:border-zinc-900 pt-5 space-y-3">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">
-                Existing class code fallback
-              </p>
-
-              <div className="bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl p-4 flex items-center justify-between gap-4 relative group overflow-hidden shadow-inner">
-                <code className="text-3xl font-black text-blue-600 dark:text-blue-400 tracking-wider relative z-10">
-                  {classroom?.inviteCode}
-                </code>
-
-                <button
-                  onClick={copyCode}
-                  className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold uppercase tracking-wider text-[10px] transition-all duration-300 shadow-md shadow-blue-600/10 active:scale-[0.98] relative z-10"
-                  aria-label="Interactive button"
-                >
-                  {copied ? (
-                    <>
-                      <Check className="w-3.5 h-3.5" /> Copied!
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-3.5 h-3.5" /> Copy Key
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
+            )}
         </div>
-      )}
-    </div>
-  );
+    );
 }
 
 function ClassroomInsightsView({
@@ -1099,49 +846,28 @@ function ClassroomInsightsView({
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const isTeacher = isTeacherRole(role);
+    const isTeacher = role === 'teacher';
 
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(`/api/analytics?classroomId=${classroomId}`);
-      if (!res.ok) {
-        throw new Error(`Analytics request failed with status ${res.status}`);
-      }
-      setData(await res.json());
-    } catch (error) {
-      console.error("Error loading classroom analytics:", error);
-      setData(null);
-    } finally {
-      setLoading(false);
-    }
-  };
+    const fetchData = () => {
+        setLoading(true);
+        fetch(`/api/analytics?classroomId={classroomId}`)
+            .then(res => res.json())
+            .then(d => {
+                setData(d);
+                setLoading(false);
+            });
+    };
 
   useEffect(() => {
     fetchData();
   }, [classroomId]);
 
-  if (loading)
-    return (
-      <div className="flex justify-center p-20">
-        <Loader2 className="w-6 h-6 text-purple-500 animate-spin" />
-      </div>
-    );
+    if (loading) return <div className="flex justify-center p-20"><Loader2 className="w-6 h-6 text-purple-500 animate-spin" /></div>;
 
-  if (!data)
-    return (
-      <div role="status" className="rounded-2xl border border-slate-200 dark:border-zinc-900 p-8 text-center text-sm text-slate-500 dark:text-zinc-400">
-        {CLASSROOM_ANALYTICS_UNAVAILABLE_MESSAGE}
-      </div>
-    );
-
-  const solvedCount =
-    data?.solvedStats.find((s) => s.status === "solved")?.count || 0;
-  const unsolvedCount =
-    data?.solvedStats.find((s) => s.status !== "solved")?.count || 0;
-  const totalDoubtStats = Number(solvedCount) + Number(unsolvedCount);
-  const solvedPercentage =
-    totalDoubtStats > 0 ? (Number(solvedCount) / totalDoubtStats) * 100 : 0;
+    const solvedCount = data?.solvedStats.find((s) => s.status === 'solved')?.count || 0;
+    const unsolvedCount = data?.solvedStats.find((s) => s.status !== 'solved')?.count || 0;
+    const totalDoubtStats = Number(solvedCount) + Number(unsolvedCount);
+    const solvedPercentage = totalDoubtStats > 0 ? (Number(solvedCount) / totalDoubtStats) * 100 : 0;
 
   return (
     <div className="space-y-10 animate-in fade-in duration-700">
@@ -1566,18 +1292,14 @@ function PersonalMentorView({ classroomId }: { classroomId: number }) {
       </div>
     );
 
-  if (!personalData?.isEngaged)
-    return (
-      <div className="bg-purple-500/[0.01] border border-dashed border-slate-200 dark:border-zinc-900 rounded-2xl p-8 text-center space-y-2 shadow-sm backdrop-blur-sm">
-        <Sparkles className="w-8 h-8 text-purple-500/30 mx-auto animate-pulse" />
-        <h3 className="text-lg font-bold text-slate-800 dark:text-zinc-300 tracking-tight">
-          Unlock Your AI Mentor
-        </h3>
-        <p className="text-xs text-slate-400 dark:text-zinc-500 max-w-lg mx-auto leading-relaxed font-medium">
-          {personalData?.message ||
-            "Ask more doubts to unlock personalized AI Weak Topic Detection!"}
-        </p>
-      </div>
+    if (!personalData?.isEngaged) return (
+        <div className="bg-purple-500/[0.01] border border-dashed border-slate-200 dark:border-zinc-900 rounded-2xl p-8 text-center space-y-2 shadow-sm backdrop-blur-sm">
+            <Sparkles className="w-8 h-8 text-purple-500/30 mx-auto animate-pulse" />
+            <h3 className="text-lg font-bold text-slate-800 dark:text-zinc-300 tracking-tight">Unlock Your AI Mentor</h3>
+            <p className="text-xs text-slate-400 dark:text-zinc-500 max-w-sm mx-auto leading-relaxed font-medium">
+                {personalData?.message || "Ask more doubts to unlock personalized AI Weak Topic Detection!"}
+            </p>
+        </div>
     );
 
   return (
