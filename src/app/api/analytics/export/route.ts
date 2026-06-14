@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/configs/db";
+import { requireTeacher } from "@/lib/auth/membership-guard";
 import {
   doubtsTable,
   repliesTable,
@@ -40,22 +41,7 @@ export async function GET(req: Request) {
 
   if (classroomId) {
     // Verify the user is a member of this classroom
-    const [membership] = await db
-      .select()
-      .from(membershipsTable)
-      .where(
-        and(
-          eq(membershipsTable.userEmail, email),
-          eq(membershipsTable.classroomId, classroomId),
-        ),
-      );
-
-    if (!membership) {
-      return NextResponse.json(
-        { error: "Access denied: not a member of this classroom" },
-        { status: 403 },
-      );
-    }
+    await requireTeacher(email, classroomId);
 
     classroomFilter = eq(doubtsTable.classroomId, classroomId);
   } else {
@@ -286,7 +272,17 @@ export async function GET(req: Request) {
     csv += "\nStatus,Count\n";
 
     analyticsData.solvedStats.forEach((stat) => {
-      csv += `${stat.status ? "Solved" : "Unsolved"},${stat.count}\n`;
+      let label = "Unknown";
+
+      if (stat.status === "solved") {
+        label = "Solved";
+      } else if (stat.status === "unsolved") {
+        label = "Unsolved";
+      } else if (stat.status === "in-progress") {
+        label = "In Progress";
+      }
+
+      csv += `${label},${stat.count}\n`;
     });
 
     csv += "\nContributor Name,Reply Count\n";
